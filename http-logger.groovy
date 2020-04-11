@@ -7,7 +7,7 @@
  *  Hubitat Elevation version maintained by Justin Backman
  *
  *  Description: A SmartApp to log Hubitat device states to an HTTP endpoint.
- *  Inspired by: https://github.com/HubitatCommunity/InfluxDB-Logger
+ *  Inspired by: https://github.com/HubitatCommunity/HTTP-Logger
  *
  *  NOTE: Hubitat does not currently support group names.
  *
@@ -22,8 +22,8 @@
  *   for the specific language governing permissions and limitations under the License.
  *
  *   Modification History
- *   Date       Name		Change 
- *   2020-04-11 Justin Backman	Initial Commit
+ *   Date       Name        Change 
+ *   2020-04-11 Justin Backman    Initial Commit
  *****************************************************************************************************************/
 definition(
     name: "HTTP Logger",
@@ -35,143 +35,143 @@ definition(
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
 
-	import groovy.transform.Field
-	@Field static java.util.concurrent.ConcurrentLinkedQueue loggerQueue = new java.util.concurrent.ConcurrentLinkedQueue()
-	@Field static java.util.concurrent.Semaphore mutex = new java.util.concurrent.Semaphore(1)
+    import groovy.transform.Field
+    @Field static java.util.concurrent.ConcurrentLinkedQueue loggerQueue = new java.util.concurrent.ConcurrentLinkedQueue()
+    @Field static java.util.concurrent.Semaphore mutex = new java.util.concurrent.Semaphore(1)
 
 preferences {
-      	page(name: "newPage")
+          page(name: "newPage")
 }
 
 
 def newPage() {
     dynamicPage(name: "newPage", title: "New Settings Page", install: true, uninstall: true) {
-	    section("General:") {
-    	    //input "prefDebugMode", "bool", title: "Enable debug logging?", defaultValue: true, displayDuringSetup: true
-        	input (
-        		name: "configLoggingLevelIDE",
-        		title: "IDE Live Logging Level:\nMessages with this level and higher will be logged to the IDE.",
-        		type: "enum",
-        		options: [
-	        	    "0" : "None",
-    	    	    "1" : "Error",
-        		    "2" : "Warning",
-        		    "3" : "Info",
-        	    	"4" : "Debug",
-	        	    "5" : "Trace"
-    	    	],
-        		defaultValue: "3",
-            	displayDuringSetup: true,
-	        	required: false
-    	    )
-    	}
+        section("General:") {
+            //input "prefDebugMode", "bool", title: "Enable debug logging?", defaultValue: true, displayDuringSetup: true
+            input (
+                name: "configLoggingLevelIDE",
+                title: "IDE Live Logging Level:\nMessages with this level and higher will be logged to the IDE.",
+                type: "enum",
+                options: [
+                    "0" : "None",
+                    "1" : "Error",
+                    "2" : "Warning",
+                    "3" : "Info",
+                    "4" : "Debug",
+                    "5" : "Trace"
+                ],
+                defaultValue: "3",
+                displayDuringSetup: true,
+                required: false
+            )
+        }
 
-    	section ("InfluxDB Database:") {
-	        input "prefDatabaseHost", "text", title: "Host", defaultValue: "192.168.1.100", required: true
-    	    input "prefDatabasePort", "text", title: "Port", defaultValue: "8080", required: true
-        	input "prefDatabaseName", "text", title: "path", defaultValue: "", required: true
-        	input "prefDatabaseUser", "text", title: "Username", required: false
-        	input "prefDatabasePass", "text", title: "Password", required: false
-    	}
+        section ("HTTP HTTP:") {
+            input "prefHTTPHost", "text", title: "Host", defaultValue: "192.168.1.100", required: true
+            input "prefHTTPPort", "text", title: "Port", defaultValue: "8080", required: true
+            input "prefHTTPPath", "text", title: "path", defaultValue: "", required: true
+            input "prefHTTPUser", "text", title: "Username", required: false
+            input "prefHTTPPass", "text", title: "Password", required: false
+        }
     
-    	section("Polling / Write frequency:") {
-	        input "prefSoftPollingInterval", "number", title:"Soft-Polling interval (minutes)", defaultValue: 10, required: true
+        section("Polling / Write frequency:") {
+            input "prefSoftPollingInterval", "number", title:"Soft-Polling interval (minutes)", defaultValue: 10, required: true
 
-    	    input "writeInterval", "enum", title:"How often to write to db (minutes)", defaultValue: "5", required: true,
-        		options: ["1",  "2", "3", "4", "5", "10", "15"]
-    	}
+            input "writeInterval", "enum", title:"How often to write to db (minutes)", defaultValue: "5", required: true,
+            options: ["1",  "2", "3", "4", "5", "10", "15"]
+        }
     
-	    section("System Monitoring:") {
-    	    input "prefLogModeEvents", "bool", title:"Log Mode Events?", defaultValue: true, required: true
-        	input "prefLogHubProperties", "bool", title:"Log Hub Properties?", defaultValue: true, required: true
-        	input "prefLogLocationProperties", "bool", title:"Log Location Properties?", defaultValue: true, required: true
-    	}
+        section("System Monitoring:") {
+            input "prefLogModeEvents", "bool", title:"Log Mode Events?", defaultValue: true, required: true
+            input "prefLogHubProperties", "bool", title:"Log Hub Properties?", defaultValue: true, required: true
+            input "prefLogLocationProperties", "bool", title:"Log Location Properties?", defaultValue: true, required: true
+        }
     
-		section("Input Format Preference:") {
-			input "accessAllAttributes", "bool", title:"Get Access To All Attributes?", defaultValue: false, required: true, submitOnChange: true
-		}
-		
-		if(!accessAllAttributes)
-		{
-	       	section("Devices To Monitor:", hideable:true,hidden:true) {
-    	 	  	input "accelerometers", "capability.accelerationSensor", title: "Accelerometers", multiple: true, required: false
-       			input "alarms", "capability.alarm", title: "Alarms", multiple: true, required: false
-       			input "batteries", "capability.battery", title: "Batteries", multiple: true, required: false
-       			input "beacons", "capability.beacon", title: "Beacons", multiple: true, required: false
-	       		input "buttons", "capability.button", title: "Buttons", multiple: true, required: false
-    	  		input "cos", "capability.carbonMonoxideDetector", title: "Carbon Monoxide Detectors", multiple: true, required: false
-       			input "co2s", "capability.carbonDioxideMeasurement", title: "Carbon Dioxide Detectors", multiple: true, required: false
-        		input "colors", "capability.colorControl", title: "Color Controllers", multiple: true, required: false
-	        	input "consumables", "capability.consumable", title: "Consumables", multiple: true, required: false
-    	    	input "contacts", "capability.contactSensor", title: "Contact Sensors", multiple: true, required: false
-        		input "doorsControllers", "capability.doorControl", title: "Door Controllers", multiple: true, required: false
-        		input "energyMeters", "capability.energyMeter", title: "Energy Meters", multiple: true, required: false
-        		input "humidities", "capability.relativeHumidityMeasurement", title: "Humidity Meters", multiple: true, required: false
-	        	input "illuminances", "capability.illuminanceMeasurement", title: "Illuminance Meters", multiple: true, required: false
-    	    	input "locks", "capability.lock", title: "Locks", multiple: true, required: false
-        		input "motions", "capability.motionSensor", title: "Motion Sensors", multiple: true, required: false
-        		input "musicPlayers", "capability.musicPlayer", title: "Music Players", multiple: true, required: false
-	        	input "peds", "capability.stepSensor", title: "Pedometers", multiple: true, required: false
-    	    	input "phMeters", "capability.pHMeasurement", title: "pH Meters", multiple: true, required: false
-        		input "powerMeters", "capability.powerMeter", title: "Power Meters", multiple: true, required: false
-        		input "presences", "capability.presenceSensor", title: "Presence Sensors", multiple: true, required: false
-	        	input "pressures", "capability.sensor", title: "Pressure Sensors", multiple: true, required: false
-    	    	input "shockSensors", "capability.shockSensor", title: "Shock Sensors", multiple: true, required: false
-        		input "signalStrengthMeters", "capability.signalStrength", title: "Signal Strength Meters", multiple: true, required: false
-        		input "sleepSensors", "capability.sleepSensor", title: "Sleep Sensors", multiple: true, required: false
-	        	input "smokeDetectors", "capability.smokeDetector", title: "Smoke Detectors", multiple: true, required: false
-    	    	input "soundSensors", "capability.soundSensor", title: "Sound Sensors", multiple: true, required: false
-				input "spls", "capability.soundPressureLevel", title: "Sound Pressure Level Sensors", multiple: true, required: false
-				input "switches", "capability.switch", title: "Switches", multiple: true, required: false
-	        	input "switchLevels", "capability.switchLevel", title: "Switch Levels", multiple: true, required: false
-    	    	input "tamperAlerts", "capability.tamperAlert", title: "Tamper Alerts", multiple: true, required: false
-        		input "temperatures", "capability.temperatureMeasurement", title: "Temperature Sensors", multiple: true, required: false
-        		input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
-	        	input "threeAxis", "capability.threeAxis", title: "Three-axis (Orientation) Sensors", multiple: true, required: false
-    	    	input "touchs", "capability.touchSensor", title: "Touch Sensors", multiple: true, required: false
-        		input "uvs", "capability.ultravioletIndex", title: "UV Sensors", multiple: true, required: false
-        		input "valves", "capability.valve", title: "Valves", multiple: true, required: false
-	        	input "volts", "capability.voltageMeasurement", title: "Voltage Meters", multiple: true, required: false
-    	    	input "waterSensors", "capability.waterSensor", title: "Water Sensors", multiple: true, required: false
-        		input "windowShades", "capability.windowShade", title: "Window Shades", multiple: true, required: false
-    		}
-		} else {
-			section("Devices To Monitor:", hideable:true,hidden:true) {
-				input name: "allDevices", type: "capability.*", title: "Selected Devices", multiple: true, required: false, submitOnChange: true
-			}
+        section("Input Format Preference:") {
+            input "accessAllAttributes", "bool", title:"Get Access To All Attributes?", defaultValue: false, required: true, submitOnChange: true
+        }
+        
+        if(!accessAllAttributes)
+        {
+            section("Devices To Monitor:", hideable:true,hidden:true) {
+                input "accelerometers", "capability.accelerationSensor", title: "Accelerometers", multiple: true, required: false
+                input "alarms", "capability.alarm", title: "Alarms", multiple: true, required: false
+                input "batteries", "capability.battery", title: "Batteries", multiple: true, required: false
+                input "beacons", "capability.beacon", title: "Beacons", multiple: true, required: false
+                input "buttons", "capability.button", title: "Buttons", multiple: true, required: false
+                input "cos", "capability.carbonMonoxideDetector", title: "Carbon Monoxide Detectors", multiple: true, required: false
+                input "co2s", "capability.carbonDioxideMeasurement", title: "Carbon Dioxide Detectors", multiple: true, required: false
+                input "colors", "capability.colorControl", title: "Color Controllers", multiple: true, required: false
+                input "consumables", "capability.consumable", title: "Consumables", multiple: true, required: false
+                input "contacts", "capability.contactSensor", title: "Contact Sensors", multiple: true, required: false
+                input "doorsControllers", "capability.doorControl", title: "Door Controllers", multiple: true, required: false
+                input "energyMeters", "capability.energyMeter", title: "Energy Meters", multiple: true, required: false
+                input "humidities", "capability.relativeHumidityMeasurement", title: "Humidity Meters", multiple: true, required: false
+                input "illuminances", "capability.illuminanceMeasurement", title: "Illuminance Meters", multiple: true, required: false
+                input "locks", "capability.lock", title: "Locks", multiple: true, required: false
+                input "motions", "capability.motionSensor", title: "Motion Sensors", multiple: true, required: false
+                input "musicPlayers", "capability.musicPlayer", title: "Music Players", multiple: true, required: false
+                input "peds", "capability.stepSensor", title: "Pedometers", multiple: true, required: false
+                input "phMeters", "capability.pHMeasurement", title: "pH Meters", multiple: true, required: false
+                input "powerMeters", "capability.powerMeter", title: "Power Meters", multiple: true, required: false
+                input "presences", "capability.presenceSensor", title: "Presence Sensors", multiple: true, required: false
+                input "pressures", "capability.sensor", title: "Pressure Sensors", multiple: true, required: false
+                input "shockSensors", "capability.shockSensor", title: "Shock Sensors", multiple: true, required: false
+                input "signalStrengthMeters", "capability.signalStrength", title: "Signal Strength Meters", multiple: true, required: false
+                input "sleepSensors", "capability.sleepSensor", title: "Sleep Sensors", multiple: true, required: false
+                input "smokeDetectors", "capability.smokeDetector", title: "Smoke Detectors", multiple: true, required: false
+                input "soundSensors", "capability.soundSensor", title: "Sound Sensors", multiple: true, required: false
+                input "spls", "capability.soundPressureLevel", title: "Sound Pressure Level Sensors", multiple: true, required: false
+                input "switches", "capability.switch", title: "Switches", multiple: true, required: false
+                input "switchLevels", "capability.switchLevel", title: "Switch Levels", multiple: true, required: false
+                input "tamperAlerts", "capability.tamperAlert", title: "Tamper Alerts", multiple: true, required: false
+                input "temperatures", "capability.temperatureMeasurement", title: "Temperature Sensors", multiple: true, required: false
+                input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
+                input "threeAxis", "capability.threeAxis", title: "Three-axis (Orientation) Sensors", multiple: true, required: false
+                input "touchs", "capability.touchSensor", title: "Touch Sensors", multiple: true, required: false
+                input "uvs", "capability.ultravioletIndex", title: "UV Sensors", multiple: true, required: false
+                input "valves", "capability.valve", title: "Valves", multiple: true, required: false
+                input "volts", "capability.voltageMeasurement", title: "Voltage Meters", multiple: true, required: false
+                input "waterSensors", "capability.waterSensor", title: "Water Sensors", multiple: true, required: false
+                input "windowShades", "capability.windowShade", title: "Window Shades", multiple: true, required: false
+            }
+        } else {
+            section("Devices To Monitor:", hideable:true,hidden:true) {
+                input name: "allDevices", type: "capability.*", title: "Selected Devices", multiple: true, required: false, submitOnChange: true
+            }
 
-			section() {
-				state.deviceList = [:]
-				allDevices.each { device -> 
-					state.deviceList[device.id] = "${device.label ?: device.name}"
-				}
-			}
-		
-			section() {
-				state.selectedAttr=[:]
-				settings.allDevices.each { deviceName ->
-					if(deviceName) {
-						deviceId = deviceName.getId()
-        				attr = deviceName.getSupportedAttributes().unique()
-						if(attr) {
-							state.options =[]
-							index = 0
-							attr.each {at->
-								state.options[index] = "${at}"
-								index = index+1
-							}
-			
-							section("$deviceName", hideable: true) {
-								input name:"attrForDev$deviceId", type: "enum", title: "$deviceName", options: state.options, multiple: true, required: false, submitOnChange: true
-							}
-				
-							state.selectedAttr[deviceId] = settings["attrForDev"+deviceId]
-						}
-					}
-            	}
-			}
-		}
-	}
+            section() {
+                state.deviceList = [:]
+                allDevices.each { device -> 
+                    state.deviceList[device.id] = "${device.label ?: device.name}"
+                }
+            }
+        
+            section() {
+                state.selectedAttr=[:]
+                settings.allDevices.each { deviceName ->
+                    if(deviceName) {
+                        deviceId = deviceName.getId()
+                        attr = deviceName.getSupportedAttributes().unique()
+                        if(attr) {
+                            state.options =[]
+                            index = 0
+                            attr.each {at->
+                                state.options[index] = "${at}"
+                                index = index+1
+                            }
+            
+                            section("$deviceName", hideable: true) {
+                                input name:"attrForDev$deviceId", type: "enum", title: "$deviceName", options: state.options, multiple: true, required: false, submitOnChange: true
+                            }
+                
+                            state.selectedAttr[deviceId] = settings["attrForDev"+deviceId]
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -189,7 +189,7 @@ def getDeviceObj(id) {
 
 
 /*****************************************************************************************************************
- *  SmartThings System Commands:
+ *  Hubitat System Commands:
  *****************************************************************************************************************/
 
 /**
@@ -232,19 +232,19 @@ def updated() {
     // Update internal state:
     state.loggingLevelIDE = (settings.configLoggingLevelIDE) ? settings.configLoggingLevelIDE.toInteger() : 3
     
-    // Database config:
-    state.databaseHost = settings.prefDatabaseHost
-    state.databasePort = settings.prefDatabasePort
-    state.databaseName = settings.prefDatabaseName
-    state.databaseUser = settings.prefDatabaseUser
-    state.databasePass = settings.prefDatabasePass 
+    // HTTP config:
+    state.HTTPHost = settings.prefHTTPHost
+    state.HTTPPort = settings.prefHTTPPort
+    state.HTTPPath = settings.prefHTTPPath
+    state.HTTPUser = settings.prefHTTPUser
+    state.HTTPPass = settings.prefHTTPPass 
     
-    state.path = "/write?db=${state.databaseName}"
+    state.path = "/${state.HTTPPath}"
     state.headers = [:] 
-    state.headers.put("HOST", "${state.databaseHost}:${state.databasePort}")
+    state.headers.put("HOST", "${state.HTTPHost}:${state.HTTPPort}")
     //state.headers.put("Content-Type", "application/x-www-form-urlencoded")
-    if (state.databaseUser && state.databasePass) {
-        state.headers.put("Authorization", encodeCredentialsBasic(state.databaseUser, state.databasePass))
+    if (state.HTTPUser && state.HTTPPass) {
+        state.headers.put("Authorization", encodeCredentialsBasic(state.HTTPUser, state.HTTPPass))
     }
 
     // Build array of device collections and the attributes we want to report on for that collection:
@@ -278,8 +278,8 @@ def updated() {
     state.deviceAttributes << [ devices: 'sleepSensors', attributes: ['sleeping']]
     state.deviceAttributes << [ devices: 'smokeDetectors', attributes: ['smoke']]
     state.deviceAttributes << [ devices: 'soundSensors', attributes: ['sound']]
-	state.deviceAttributes << [ devices: 'spls', attributes: ['soundPressureLevel']]
-	state.deviceAttributes << [ devices: 'switches', attributes: ['switch']]
+    state.deviceAttributes << [ devices: 'spls', attributes: ['soundPressureLevel']]
+    state.deviceAttributes << [ devices: 'switches', attributes: ['switch']]
     state.deviceAttributes << [ devices: 'switchLevels', attributes: ['level']]
     state.deviceAttributes << [ devices: 'tamperAlerts', attributes: ['tamper']]
     state.deviceAttributes << [ devices: 'temperatures', attributes: ['temperature']]
@@ -324,17 +324,17 @@ def handleAppTouch(evt) {
 def handleModeEvent(evt) {
     logger("handleModeEvent(): Mode changed to: ${evt.value}","info")
 
-    def locationId = escapeStringForInfluxDB(location.id.toString())
-    def locationName = escapeStringForInfluxDB(location.name)
-    def mode = '"' + escapeStringForInfluxDB(evt.value) + '"'
-	def data = "_stMode,locationId=${locationId},locationName=${locationName} mode=${mode}"
-    queueToInfluxDb(data)
+    def locationId = escapeStringForHTTP(location.id.toString())
+    def locationName = escapeStringForHTTP(location.name)
+    def mode = '"' + escapeStringForHTTP(evt.value) + '"'
+    def data = "_stMode,locationId=${locationId},locationName=${locationName} mode=${mode}"
+    queueToHTTPDb(data)
 }
 
 /**
  *  handleEvent(evt)
  *
- *  Builds data to send to InfluxDB.
+ *  Builds data to send to HTTP.
  *   - Escapes and quotes string values.
  *   - Calculates logical binary values where string values can be 
  *     represented as binary values (e.g. contact: closed = 1, open = 0)
@@ -347,24 +347,24 @@ def handleEvent(evt) {
     //logger("handleEvent(): $evt.unit","info")
     logger("handleEvent(): $evt.displayName($evt.name:$evt.unit) $evt.value","info")
     
-    // Build data string to send to InfluxDB:
+    // Build data string to send to HTTP:
     //  Format: <measurement>[,<tag_name>=<tag_value>] field=<field_value>
     //    If value is an integer, it must have a trailing "i"
     //    If value is a string, it must be enclosed in double quotes.
     def measurement = evt.name
     // tags:
-    def deviceId = escapeStringForInfluxDB(evt.deviceId.toString())
-    def deviceName = escapeStringForInfluxDB(evt.displayName)
-    def groupId = escapeStringForInfluxDB(evt?.device.device.groupId)
-    def groupName = escapeStringForInfluxDB(getGroupName(evt?.device.device.groupId))
-    def hubId = escapeStringForInfluxDB(evt?.device.device.hubId.toString())
-    def hubName = escapeStringForInfluxDB(evt?.device.device.hub.name.toString())
+    def deviceId = escapeStringForHTTP(evt.deviceId.toString())
+    def deviceName = escapeStringForHTTP(evt.displayName)
+    def groupId = escapeStringForHTTP(evt?.device.device.groupId)
+    def groupName = escapeStringForHTTP(getGroupName(evt?.device.device.groupId))
+    def hubId = escapeStringForHTTP(evt?.device.device.hubId.toString())
+    def hubName = escapeStringForHTTP(evt?.device.device.hub.name.toString())
     // Don't pull these from the evt.device as the app itself will be associated with one location.
-    def locationId = escapeStringForInfluxDB(location.id.toString())
-    def locationName = escapeStringForInfluxDB(location.name)
+    def locationId = escapeStringForHTTP(location.id.toString())
+    def locationName = escapeStringForHTTP(location.name)
 
-    def unit = escapeStringForInfluxDB(evt.unit)
-    def value = escapeStringForInfluxDB(evt.value)
+    def unit = escapeStringForHTTP(evt.unit)
+    def value = escapeStringForHTTP(evt.value)
     def valueBinary = ''
     
     def data = "${measurement},deviceId=${deviceId},deviceName=${deviceName},groupId=${groupId},groupName=${groupName},hubId=${hubId},hubName=${hubName},locationId=${locationId},locationName=${locationName}"
@@ -543,7 +543,7 @@ def handleEvent(evt) {
     }
     // Catch any other event with a string value that hasn't been handled:
     else if (evt.value ==~ /.*[^0-9\.,-].*/) { // match if any characters are not digits, period, comma, or hyphen.
-		logger("handleEvent(): Found a string value that's not explicitly handled: Device Name: ${deviceName}, Event Name: ${evt.name}, Value: ${evt.value}","warn")
+        logger("handleEvent(): Found a string value that's not explicitly handled: Device Name: ${deviceName}, Event Name: ${evt.name}, Value: ${evt.value}","warn")
         value = '"' + value + '"'
         data += ",unit=${unit} value=${value}"
     }
@@ -554,8 +554,8 @@ def handleEvent(evt) {
     
     //logger("$data","info")
     
-    // Queue data for later write to InfluxDB
-    queueToInfluxDb(data)
+    // Queue data for later write to HTTP
+    queueToHTTPDb(data)
 }
 
 
@@ -568,7 +568,7 @@ def handleEvent(evt) {
  *
  *  Executed by schedule.
  * 
- *  Forces data to be posted to InfluxDB (even if an event has not been triggered).
+ *  Forces data to be posted to HTTP (even if an event has not been triggered).
  *  Doesn't poll devices, just builds a fake event to pass to handleEvent().
  *
  *  Also calls LogSystemProperties().
@@ -577,229 +577,229 @@ def softPoll() {
     logger("softPoll()","trace")
     
     logSystemProperties()
-	if(!accessAllAttributes) {
-		// Iterate over each attribute for each device, in each device collection in deviceAttributes:
-    	def devs // temp variable to hold device collection.
-    	state.deviceAttributes.each { da ->
-	        devs = settings."${da.devices}"
-    	    if (devs && (da.attributes)) {
-        	    devs.each { d ->
-            	    da.attributes.each { attr ->
-                	    if (d.hasAttribute(attr) && d.latestState(attr)?.value != null) {
-                    	    logger("softPoll(): Softpolling device ${d} for attribute: ${attr}","info")
-                        	// Send fake event to handleEvent():
+    if(!accessAllAttributes) {
+        // Iterate over each attribute for each device, in each device collection in deviceAttributes:
+        def devs // temp variable to hold device collection.
+        state.deviceAttributes.each { da ->
+            devs = settings."${da.devices}"
+            if (devs && (da.attributes)) {
+                devs.each { d ->
+                    da.attributes.each { attr ->
+                        if (d.hasAttribute(attr) && d.latestState(attr)?.value != null) {
+                            logger("softPoll(): Softpolling device ${d} for attribute: ${attr}","info")
+                            // Send fake event to handleEvent():
 
-	                        handleEvent([
-    	                        name: attr, 
-        	                    value: d.latestState(attr)?.value,
-            	                unit: d.latestState(attr)?.unit,
-                	            device: d,
-                    	        deviceId: d.id,
-                        	    displayName: d.displayName
-                        	])
-						}
-					}
-				}
-			}
-		}
-	} else {
-		state.selectedAttr.each{ entry -> 
-			d = getDeviceObj(entry.key)
-			entry.value.each{ attr ->
-            	if (d.hasAttribute(attr) && d.latestState(attr)?.value != null) {
-            		logger("softPoll(): Softpolling device ${d} for attribute: ${attr}","info")
-                	// Send fake event to handleEvent():
-                	handleEvent([
-	                	name: attr, 
-    	                value: d.latestState(attr)?.value,
-        	            unit: d.latestState(attr)?.unit,
-            	        device: d,
-                	    deviceId: d.id,
-                    	displayName: d.displayName
-                	])
-				}
-			}
-		}
-	}
+                            handleEvent([
+                                name: attr, 
+                                value: d.latestState(attr)?.value,
+                                unit: d.latestState(attr)?.unit,
+                                device: d,
+                                deviceId: d.id,
+                                displayName: d.displayName
+                            ])
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        state.selectedAttr.each{ entry -> 
+            d = getDeviceObj(entry.key)
+            entry.value.each{ attr ->
+                if (d.hasAttribute(attr) && d.latestState(attr)?.value != null) {
+                    logger("softPoll(): Softpolling device ${d} for attribute: ${attr}","info")
+                    // Send fake event to handleEvent():
+                    handleEvent([
+                        name: attr, 
+                        value: d.latestState(attr)?.value,
+                        unit: d.latestState(attr)?.unit,
+                        device: d,
+                        deviceId: d.id,
+                        displayName: d.displayName
+                    ])
+                }
+            }
+        }
+    }
 }
 
 /**
  *  logSystemProperties()
  *
- *  Generates measurements for SmartThings system (hubs and locations) properties.
+ *  Generates measurements for Hubitat system (hubs and locations) properties.
  **/
 def logSystemProperties() {
     logger("logSystemProperties()","trace")
 
-    def locationId = '"' + escapeStringForInfluxDB(location.id.toString()) + '"'
-    def locationName = '"' + escapeStringForInfluxDB(location.name) + '"'
+    def locationId = '"' + escapeStringForHTTP(location.id.toString()) + '"'
+    def locationName = '"' + escapeStringForHTTP(location.name) + '"'
 
-	// Location Properties:
+    // Location Properties:
     if (prefLogLocationProperties) {
         try {
-            def tz = '"' + escapeStringForInfluxDB(location.timeZone.ID.toString()) + '"'
-            def mode = '"' + escapeStringForInfluxDB(location.mode) + '"'
+            def tz = '"' + escapeStringForHTTP(location.timeZone.ID.toString()) + '"'
+            def mode = '"' + escapeStringForHTTP(location.mode) + '"'
             def hubCount = location.hubs.size()
             def times = getSunriseAndSunset()
             def srt = '"' + times.sunrise.format("HH:mm", location.timeZone) + '"'
             def sst = '"' + times.sunset.format("HH:mm", location.timeZone) + '"'
 
             def data = "_heLocation,locationId=${locationId},locationName=${locationName},latitude=${location.latitude},longitude=${location.longitude},timeZone=${tz} mode=${mode},hubCount=${hubCount}i,sunriseTime=${srt},sunsetTime=${sst}"
-            queueToInfluxDb(data)
+            queueToHTTPDb(data)
             //log.debug("LocationData = ${data}")
         } catch (e) {
-		    logger("logSystemProperties(): Unable to log Location properties: ${e}","error")
+            logger("logSystemProperties(): Unable to log Location properties: ${e}","error")
         }
-	}
+    }
 
-	// Hub Properties:
+    // Hub Properties:
     if (prefLogHubProperties) {
-       	location.hubs.each { h ->
-        	try {
-                def hubId = '"' + escapeStringForInfluxDB(h.id.toString()) + '"'
-                def hubName = '"' + escapeStringForInfluxDB(h.name.toString()) + '"'
-                def hubIP = '"' + escapeStringForInfluxDB(h.localIP.toString()) + '"'
-                //def hubStatus = '"' + escapeStringForInfluxDB(h.status) + '"'
+           location.hubs.each { h ->
+            try {
+                def hubId = '"' + escapeStringForHTTP(h.id.toString()) + '"'
+                def hubName = '"' + escapeStringForHTTP(h.name.toString()) + '"'
+                def hubIP = '"' + escapeStringForHTTP(h.localIP.toString()) + '"'
+                //def hubStatus = '"' + escapeStringForHTTP(h.status) + '"'
                 //def batteryInUse = ("false" == h.hub.getDataValue("batteryInUse")) ? "0i" : "1i"
-                // See fix here for null time returned: https://github.com/codersaur/SmartThings/pull/33/files
+                // See fix here for null time returned: https://github.com/codersaur/Hubitat/pull/33/files
                 //def hubUptime = h.hub.getDataValue("uptime") + 'i'
                 //def hubLastBootUnixTS = h.hub.uptime + 'i'
                 //def zigbeePowerLevel = h.hub.getDataValue("zigbeePowerLevel") + 'i'
-                //def zwavePowerLevel =  '"' + escapeStringForInfluxDB(h.hub.getDataValue("zwavePowerLevel")) + '"'
-                def firmwareVersion =  '"' + escapeStringForInfluxDB(h.firmwareVersionString) + '"'
+                //def zwavePowerLevel =  '"' + escapeStringForHTTP(h.hub.getDataValue("zwavePowerLevel")) + '"'
+                def firmwareVersion =  '"' + escapeStringForHTTP(h.firmwareVersionString) + '"'
                 
                 def data = "_heHub,locationId=${locationId},locationName=${locationName},hubId=${hubId},hubName=${hubName},hubIP=${hubIP} "
                 data += "firmwareVersion=${firmwareVersion}"
-                // See fix here for null time returned: https://github.com/codersaur/SmartThings/pull/33/files
+                // See fix here for null time returned: https://github.com/codersaur/Hubitat/pull/33/files
                 //data += "status=${hubStatus},batteryInUse=${batteryInUse},uptime=${hubUptime},zigbeePowerLevel=${zigbeePowerLevel},zwavePowerLevel=${zwavePowerLevel},firmwareVersion=${firmwareVersion}"
                 //data += "status=${hubStatus},batteryInUse=${batteryInUse},uptime=${hubLastBootUnixTS},zigbeePowerLevel=${zigbeePowerLevel},zwavePowerLevel=${zwavePowerLevel},firmwareVersion=${firmwareVersion}"
-                queueToInfluxDb(data)
+                queueToHTTPDb(data)
                 //log.debug("HubData = ${data}")
             } catch (e) {
-				logger("logSystemProperties(): Unable to log Hub properties: ${e}","error")
-        	}
-       	}
+                logger("logSystemProperties(): Unable to log Hub properties: ${e}","error")
+            }
+           }
 
-	}
+    }
 }
 
-def queueToInfluxDb(data) {
+def queueToHTTPDb(data) {
     // Add timestamp (influxdb does this automatically, but since we're batching writes, we need to add it
     long timeNow = (new Date().time) * 1e6 // Time is in milliseconds, needs to be in nanoseconds
     data += " ${timeNow}"
     
     int queueSize = 0
-	try {
-		mutex.acquire()
-		//if(!mutex.tryAcquire()) {
-		//	logger("Error 1 in queueToInfluxDb","Warning")
-		//	mutex.release()
-		//}
-		
-		loggerQueue.offer(data)
-		queueSize = loggerQueue.size()
-		
-		// Give some visibility at the interface level
-		state.queuedData = loggerQueue.toArray()
-	} 
-	catch(e) {
-		logger("Error 2 in queueToInfluxDb","Warning")
-	} 
-	finally {
-		mutex.release()
-	}
-	
+    try {
+        mutex.acquire()
+        //if(!mutex.tryAcquire()) {
+        //    logger("Error 1 in queueToHTTPDb","Warning")
+        //    mutex.release()
+        //}
+        
+        loggerQueue.offer(data)
+        queueSize = loggerQueue.size()
+        
+        // Give some visibility at the interface level
+        state.queuedData = loggerQueue.toArray()
+    } 
+    catch(e) {
+        logger("Error 2 in queueToHTTPDb","Warning")
+    } 
+    finally {
+        mutex.release()
+    }
+    
     if (queueSize > 100) {
         logger("Queue size is too big, triggering write now", "info")
-        writeQueuedDataToInfluxDb()
+        writeQueuedDataToHTTPDb()
     }
 }
 
-def writeQueuedDataToInfluxDb() {
+def writeQueuedDataToHTTPDb() {
     String writeData = ""
-	
-	try {
-		mutex.acquire()
-		//if(!mutex.tryAcquire()) {
-		//	logger("Error 1 in writeQueuedDataToInfluxDb","Warning")
-		//	mutex.release()
-		//}
-				
-		if(loggerQueue.size() == 0) {
-            logger("No queued data to write to InfluxDB", "info")
+    
+    try {
+        mutex.acquire()
+        //if(!mutex.tryAcquire()) {
+        //    logger("Error 1 in writeQueuedDataToHTTPDb","Warning")
+        //    mutex.release()
+        //}
+                
+        if(loggerQueue.size() == 0) {
+            logger("No queued data to write to HTTP", "info")
             return
-		}
+        }
         logger("Writing queued data of size ${loggerQueue.size()} out", "info")
-		a = loggerQueue.toArray() 
-		writeData = a.join('\n')
-		loggerQueue.clear()
-		state.queuedData = []
-	}	   
-	catch(e) {
-		logger("Error 2 in writeQueuedDataToInfluxDb","Warning")
-	} 
-	finally {
-		mutex.release()
-	}
-	
-    postToInfluxDB(writeData)
+        a = loggerQueue.toArray() 
+        writeData = a.join('\n')
+        loggerQueue.clear()
+        state.queuedData = []
+    }       
+    catch(e) {
+        logger("Error 2 in writeQueuedDataToHTTPDb","Warning")
+    } 
+    finally {
+        mutex.release()
+    }
+    
+    postToHTTP(writeData)
 }
 
 /**
- *  postToInfluxDB()
+ *  postToHTTP()
  *
- *  Posts data to InfluxDB.
+ *  Posts data to HTTP.
  *
- *  Uses hubAction instead of httpPost() in case InfluxDB server is on the same LAN as the Smartthings Hub.
+ *  Uses hubAction instead of httpPost() in case HTTP server is on the same LAN as the Smartthings Hub.
  **/
-def postToInfluxDB(data) {
-    logger("postToInfluxDB(): Posting data to InfluxDB: Host: ${state.databaseHost}, Port: ${state.databasePort}, Database: ${state.databaseName}, Data: [${data}]","info")
+def postToHTTP(data) {
+    logger("postToHTTP(): Posting data to HTTP: Host: ${state.HTTPHost}, Port: ${state.HTTPPort}, HTTP: ${state.HTTPPath}, Data: [${data}]","info")
     //logger("$state", "info")
     //try {
     //    //def hubAction = new physicalgraph.device.HubAction(
     //    def hubAction = new hubitat.device.HubAction(
-    //    	[
+    //        [
     //            method: "POST",
     //            path: state.path,
     //            body: data,
     //            headers: state.headers
     //        ],
     //        null,
-    //        [ callback: handleInfluxResponse ]
+    //        [ callback: handleHTTPResponse ]
     //    )
-	//	
+    //    
     //    sendHubCommand(hubAction)
     //    //logger("hubAction command sent", "info")
     //}
     //catch (Exception e) {
-	//	logger("postToInfluxDB(): Exception ${e} on ${hubAction}","error")
+    //    logger("postToHTTP(): Exception ${e} on ${hubAction}","error")
     //}
 
     // Hubitat Async http Post
      
-	try {
-		def postParams = [
-			uri: "http://${state.databaseHost}:${state.databasePort}/write?db=${state.databaseName}" ,
-			requestContentType: 'application/json',
-			contentType: 'application/json',
-			body : data
-			]
-		asynchttpPost('handleInfluxResponse', postParams) 
-	} catch (e) {	
-		logger("postToInfluxDB(): Something went wrong when posting: ${e}","error")
-	}
+    try {
+        def postParams = [
+            uri: "http://${state.HTTPHost}:${state.HTTPPort}/${state.HTTPPath}" ,
+            requestContentType: 'application/json',
+            contentType: 'application/json',
+            body : data
+            ]
+        asynchttpPost('handleHTTPResponse', postParams) 
+    } catch (e) {    
+        logger("postToHTTP(): Something went wrong when posting: ${e}","error")
+    }
 
 }
 
 /**
- *  handleInfluxResponse()
+ *  handleHTTPResponse()
  *
- *  Handles response from post made in postToInfluxDB().
+ *  Handles response from post made in postToHTTP().
  **/
-def handleInfluxResponse(hubResponse, data) {
-    //logger("postToInfluxDB(): status of post call is: ${hubResponse.status}", "info")
+def handleHTTPResponse(hubResponse, data) {
+    //logger("postToHTTP(): status of post call is: ${hubResponse.status}", "info")
     if(hubResponse.status >= 400) {
-		logger("postToInfluxDB(): Something went wrong! Response from InfluxDB: Status: ${hubResponse.status}, Headers: ${hubResponse.headers}, Data: ${data}","error")
+        logger("postToHTTP(): Something went wrong! Response from HTTP: Status: ${hubResponse.status}, Headers: ${hubResponse.headers}, Data: ${data}","error")
     }
 }
 
@@ -815,7 +815,7 @@ def handleInfluxResponse(hubResponse, data) {
  *   softPoll() - Run every {state.softPollingInterval} minutes.
  **/
 private manageSchedules() {
-	logger("manageSchedules()","trace")
+    logger("manageSchedules()","trace")
 
     // Generate a random offset (1-60):
     Random rand = new Random(now())
@@ -823,7 +823,7 @@ private manageSchedules() {
     
     try {
         unschedule(softPoll)
-        unschedule(writeQueuedDataToInfluxDb)
+        unschedule(writeQueuedDataToHTTPDb)
     }
     catch(e) {
         // logger("manageSchedules(): Unschedule failed!","error")
@@ -837,7 +837,7 @@ private manageSchedules() {
     }
     
     randomOffset = randomOffset+8
-    schedule("${randomOffset} 0/${state.writeInterval} * * * ?", "writeQueuedDataToInfluxDb")
+    schedule("${randomOffset} 0/${state.writeInterval} * * * ?", "writeQueuedDataToHTTPDb")
 }
 
 /**
@@ -846,7 +846,7 @@ private manageSchedules() {
  *  Configures subscriptions.
  **/
 private manageSubscriptions() {
-	logger("manageSubscriptions()","trace")
+    logger("manageSubscriptions()","trace")
 
     // Unsubscribe:
     unsubscribe()
@@ -857,28 +857,28 @@ private manageSubscriptions() {
     // Subscribe to mode events:
     if (prefLogModeEvents) subscribe(location, "mode", handleModeEvent)
     
-	if(!accessAllAttributes) {
-    	// Subscribe to device attributes (iterate over each attribute for each device collection in state.deviceAttributes):
-    	def devs // dynamic variable holding device collection.
-    	state.deviceAttributes.each { da ->
-        	devs = settings."${da.devices}"
-        	if (devs && (da.attributes)) {
-            	da.attributes.each { attr ->
-                	logger("manageSubscriptions(): Subscribing to attribute: ${attr}, for devices: ${da.devices}","info")
-                	// There is no need to check if all devices in the collection have the attribute.
-                	subscribe(devs, attr, handleEvent)
-				}
-			}
-		}
-	} else {
-		state.selectedAttr.each{ entry -> 
-			d = getDeviceObj(entry.key)
-			entry.value.each{ attr ->
-				logger("manageSubscriptions(): Subscribing to attribute: ${attr}, for device: ${d}","info")
-				subscribe(d, attr, handleEvent)
-			}
-		}
-	}
+    if(!accessAllAttributes) {
+        // Subscribe to device attributes (iterate over each attribute for each device collection in state.deviceAttributes):
+        def devs // dynamic variable holding device collection.
+        state.deviceAttributes.each { da ->
+            devs = settings."${da.devices}"
+            if (devs && (da.attributes)) {
+                da.attributes.each { attr ->
+                    logger("manageSubscriptions(): Subscribing to attribute: ${attr}, for devices: ${da.devices}","info")
+                    // There is no need to check if all devices in the collection have the attribute.
+                    subscribe(devs, attr, handleEvent)
+                }
+            }
+        }
+    } else {
+        state.selectedAttr.each{ entry -> 
+            d = getDeviceObj(entry.key)
+            entry.value.each{ attr ->
+                logger("manageSubscriptions(): Subscribing to attribute: ${attr}, for device: ${d}","info")
+                subscribe(d, attr, handleEvent)
+            }
+        }
+    }
 }
 
 /**
@@ -921,22 +921,21 @@ private logger(msg, level = "debug") {
  *  Encode credentials for HTTP Basic authentication.
  **/
 private encodeCredentialsBasic(username, password) {
-	def rawString = "Basic " + "${username}:${password}"
+    def rawString = "Basic " + "${username}:${password}"
     return rawString.bytes.encodeBase64().toString()
 }
 
 /**
- *  escapeStringForInfluxDB()
+ *  escapeStringForHTTP()
  *
- *  Escape values to InfluxDB.
+ *  Escape values to HTTP.
  *  
  *  If a tag key, tag value, or field key contains a space, comma, or an equals sign = it must 
  *  be escaped using the backslash character \. Backslash characters do not need to be escaped. 
  *  Commas and spaces will also need to be escaped for measurements, though equals signs = do not.
  *
- *  Further info: https://docs.influxdata.com/influxdb/v0.10/write_protocols/write_syntax/
  **/
-private escapeStringForInfluxDB(str) {
+private escapeStringForHTTP(str) {
     //logger("$str", "info")
     if (str) {
         str = str.replaceAll(" ", "\\\\ ") // Escape spaces.
@@ -959,9 +958,8 @@ private escapeStringForInfluxDB(str) {
  *  This is done manually as there does not appear to be a way to enumerate
  *  groups from a SmartApp currently.
  * 
- *  GroupIds can be obtained from the SmartThings IDE under 'My Locations'.
+ *  GroupIds can be obtained from the Hubitat IDE under 'My Locations'.
  *
- *  See: https://community.smartthings.com/t/accessing-group-within-a-smartapp/6830
  **/
 private getGroupName(id) {
 
