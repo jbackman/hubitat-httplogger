@@ -66,11 +66,11 @@ def newPage() {
         }
 
         section ("HTTP Endpoint:") {
-            input "prefHTTPScheme", "text", title: "HTTP/HTTPS", defaultValue: "http", required: true, 
-            options: ['http','https']
+            input "prefHTTPScheme", "enum", title: "HTTP/HTTPS", defaultValue: "0", required: true, 
+            options: ["0": 'http',"1": 'https']
             input "prefHTTPHost", "text", title: "Host", defaultValue: "192.168.1.100", required: true
             input "prefHTTPPort", "text", title: "Port", defaultValue: "8080", required: true
-            input "prefHTTPPath", "text", title: "path", defaultValue: "", required: true
+            input "prefHTTPPath", "text", title: "path", defaultValue: "", required: false
             input "prefHTTPUser", "text", title: "Username", required: false
             input "prefHTTPPass", "text", title: "Password", required: false
         }
@@ -233,7 +233,8 @@ def updated() {
     state.loggingLevelIDE = (settings.configLoggingLevelIDE) ? settings.configLoggingLevelIDE.toInteger() : 3
     
     // HTTP config:
-    state.HTTPScheme = settings.prefHTTPScheme
+    HTTPScheme=['http','https']
+    state.HTTPScheme = HTTPScheme[settings.prefHTTPScheme]
     state.HTTPHost = settings.prefHTTPHost
     state.HTTPPort = settings.prefHTTPPort
     state.HTTPPath = settings.prefHTTPPath
