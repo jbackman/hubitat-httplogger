@@ -331,7 +331,7 @@ def handleModeEvent(evt) {
     def locationId = escapeStringForHTTP(location.id.toString())
     def locationName = escapeStringForHTTP(location.name)
     def mode = '"' + escapeStringForHTTP(evt.value) + '"'
-    def data = [measurement: "_stMode", locationId: ${locationId}, locationName: ${locationName}, mode=${mode}]
+    def data = [measurement: "_stMode", locationId: ${locationId}, locationName: ${locationName}, mode: ${mode}]
     queueToHTTP(data)
 }
 
