@@ -27,7 +27,7 @@
  *****************************************************************************************************************/
 definition(
     name: "HTTP Logger",
-    namespace: "nowhereville",
+    namespace: "jitonline",
     author: "Justin Backman (jbackman)",
     description: "Log Hubitat device states to HTTP endpoint (such as logstash)",
     category: "My Apps",
@@ -233,8 +233,8 @@ def updated() {
     state.loggingLevelIDE = (settings.configLoggingLevelIDE) ? settings.configLoggingLevelIDE.toInteger() : 3
     
     // HTTP config:
-    HTTPScheme=['http','https']
-    state.HTTPScheme = HTTPScheme[settings.prefHTTPScheme]
+    def HTTPScheme=['http','https']
+    state.HTTPScheme = HTTPScheme.get(settings.prefHTTPScheme.toInteger())
     state.HTTPHost = settings.prefHTTPHost
     state.HTTPPort = settings.prefHTTPPort
     state.HTTPPath = settings.prefHTTPPath
