@@ -331,7 +331,7 @@ def handleModeEvent(evt) {
     def locationId = escapeStringForHTTP(location.id.toString())
     def locationName = escapeStringForHTTP(location.name)
     def mode = '"' + escapeStringForHTTP(evt.value) + '"'
-    def data = "_stMode,locationId=${locationId},locationName=${locationName} mode=${mode}"
+    def data = [measurement: '_stMode', locationId: ${locationId}, locationName: ${locationName}, mode=${mode}]
     queueToHTTP(data)
 }
 
@@ -671,7 +671,7 @@ def logSystemProperties() {
                 //def zwavePowerLevel =  '"' + escapeStringForHTTP(h.hub.getDataValue("zwavePowerLevel")) + '"'
                 def firmwareVersion =  '"' + escapeStringForHTTP(h.firmwareVersionString) + '"'
                 
-                def data = [measurement: _heHub, locationId: ${locationId}, locationName: ${locationName}, hubId: ${hubId}, hubName: ${hubName}, hubIP: ${hubIP}]
+                def data = [measurement: '_heHub', locationId: ${locationId}, locationName: ${locationName}, hubId: ${hubId}, hubName: ${hubName}, hubIP: ${hubIP}]
                 data << [firmwareVersion: ${firmwareVersion}]
                 // See fix here for null time returned: https://github.com/codersaur/Hubitat/pull/33/files
                 //data += "status=${hubStatus},batteryInUse=${batteryInUse},uptime=${hubUptime},zigbeePowerLevel=${zigbeePowerLevel},zwavePowerLevel=${zwavePowerLevel},firmwareVersion=${firmwareVersion}"
@@ -752,7 +752,7 @@ def writeQueuedDataToHTTP() {
  *  Uses hubAction instead of httpPost() in case HTTP server is on the same LAN as the Smartthings Hub.
  **/
 def postToHTTP(data) {
-    logger("postToHTTP(): Posting data to HTTP: Host: ${state.HTTPHost}, Port: ${state.HTTPPort}, HTTP: ${state.HTTPPath}, Data: [${data}]","info")
+    logger("postToHTTP(): Posting data to HTTP: Host: ${state.HTTPHost}, Port: ${state.HTTPPort}, HTTP: ${state.HTTPPath}","info")
     //logger("$state", "info")
     //try {
     //    //def hubAction = new physicalgraph.device.HubAction(
