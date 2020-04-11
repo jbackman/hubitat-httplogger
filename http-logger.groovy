@@ -689,7 +689,7 @@ def logSystemProperties() {
 def queueToHTTP(data) {
     // Add timestamp 
     long timeNow = (new Date().time) * 1e6 // Time is in milliseconds, needs to be in nanoseconds
-    data << [timestamp: ${timeNow}]
+    data << [timestamp: "${timeNow}"]
     
     int queueSize = 0
     try {
