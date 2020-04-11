@@ -47,7 +47,6 @@ preferences {
 def newPage() {
     dynamicPage(name: "newPage", title: "New Settings Page", install: true, uninstall: true) {
         section("General:") {
-            //input "prefDebugMode", "bool", title: "Enable debug logging?", defaultValue: true, displayDuringSetup: true
             input (
                 name: "configLoggingLevelIDE",
                 title: "IDE Live Logging Level:\nMessages with this level and higher will be logged to the IDE.",
@@ -66,7 +65,9 @@ def newPage() {
             )
         }
 
-        section ("HTTP HTTP:") {
+        section ("HTTP Endpoint:") {
+            input "prefHTTPScheme", "text", title: "HTTP/HTTPS", defaultValue: "http", required: true, 
+            options: ['http','https']
             input "prefHTTPHost", "text", title: "Host", defaultValue: "192.168.1.100", required: true
             input "prefHTTPPort", "text", title: "Port", defaultValue: "8080", required: true
             input "prefHTTPPath", "text", title: "path", defaultValue: "", required: true
@@ -77,7 +78,7 @@ def newPage() {
         section("Polling / Write frequency:") {
             input "prefSoftPollingInterval", "number", title:"Soft-Polling interval (minutes)", defaultValue: 10, required: true
 
-            input "writeInterval", "enum", title:"How often to write to db (minutes)", defaultValue: "5", required: true,
+            input "writeInterval", "enum", title:"How often to write to http (minutes)", defaultValue: "5", required: true,
             options: ["1",  "2", "3", "4", "5", "10", "15"]
         }
     
@@ -179,7 +180,6 @@ def getDeviceObj(id) {
     def found
     settings.allDevices.each { device -> 
         if (device.getId() == id) {
-            //log.debug "Found at $device for $id with id: ${device.id}"
             found = device
         }
     }
@@ -233,6 +233,7 @@ def updated() {
     state.loggingLevelIDE = (settings.configLoggingLevelIDE) ? settings.configLoggingLevelIDE.toInteger() : 3
     
     // HTTP config:
+    state.HTTPScheme = settings.prefHTTPScheme
     state.HTTPHost = settings.prefHTTPHost
     state.HTTPPort = settings.prefHTTPPort
     state.HTTPPath = settings.prefHTTPPath
@@ -328,7 +329,7 @@ def handleModeEvent(evt) {
     def locationName = escapeStringForHTTP(location.name)
     def mode = '"' + escapeStringForHTTP(evt.value) + '"'
     def data = "_stMode,locationId=${locationId},locationName=${locationName} mode=${mode}"
-    queueToHTTPDb(data)
+    queueToHTTP(data)
 }
 
 /**
@@ -341,7 +342,6 @@ def handleModeEvent(evt) {
  * 
  *  Useful references: 
  *   - http://docs.smartthings.com/en/latest/capabilities-reference.html
- *   - https://docs.influxdata.com/influxdb/v0.10/guides/writing_data/
  **/
 def handleEvent(evt) {
     //logger("handleEvent(): $evt.unit","info")
@@ -555,7 +555,7 @@ def handleEvent(evt) {
     //logger("$data","info")
     
     // Queue data for later write to HTTP
-    queueToHTTPDb(data)
+    queueToHTTP(data)
 }
 
 
@@ -645,7 +645,7 @@ def logSystemProperties() {
             def sst = '"' + times.sunset.format("HH:mm", location.timeZone) + '"'
 
             def data = "_heLocation,locationId=${locationId},locationName=${locationName},latitude=${location.latitude},longitude=${location.longitude},timeZone=${tz} mode=${mode},hubCount=${hubCount}i,sunriseTime=${srt},sunsetTime=${sst}"
-            queueToHTTPDb(data)
+            queueToHTTP(data)
             //log.debug("LocationData = ${data}")
         } catch (e) {
             logger("logSystemProperties(): Unable to log Location properties: ${e}","error")
@@ -673,7 +673,7 @@ def logSystemProperties() {
                 // See fix here for null time returned: https://github.com/codersaur/Hubitat/pull/33/files
                 //data += "status=${hubStatus},batteryInUse=${batteryInUse},uptime=${hubUptime},zigbeePowerLevel=${zigbeePowerLevel},zwavePowerLevel=${zwavePowerLevel},firmwareVersion=${firmwareVersion}"
                 //data += "status=${hubStatus},batteryInUse=${batteryInUse},uptime=${hubLastBootUnixTS},zigbeePowerLevel=${zigbeePowerLevel},zwavePowerLevel=${zwavePowerLevel},firmwareVersion=${firmwareVersion}"
-                queueToHTTPDb(data)
+                queueToHTTP(data)
                 //log.debug("HubData = ${data}")
             } catch (e) {
                 logger("logSystemProperties(): Unable to log Hub properties: ${e}","error")
@@ -683,18 +683,14 @@ def logSystemProperties() {
     }
 }
 
-def queueToHTTPDb(data) {
-    // Add timestamp (influxdb does this automatically, but since we're batching writes, we need to add it
+def queueToHTTP(data) {
+    // Add timestamp 
     long timeNow = (new Date().time) * 1e6 // Time is in milliseconds, needs to be in nanoseconds
     data += " ${timeNow}"
     
     int queueSize = 0
     try {
         mutex.acquire()
-        //if(!mutex.tryAcquire()) {
-        //    logger("Error 1 in queueToHTTPDb","Warning")
-        //    mutex.release()
-        //}
         
         loggerQueue.offer(data)
         queueSize = loggerQueue.size()
@@ -703,7 +699,7 @@ def queueToHTTPDb(data) {
         state.queuedData = loggerQueue.toArray()
     } 
     catch(e) {
-        logger("Error 2 in queueToHTTPDb","Warning")
+        logger("Error 2 in queueToHTTP","Warning")
     } 
     finally {
         mutex.release()
@@ -711,17 +707,17 @@ def queueToHTTPDb(data) {
     
     if (queueSize > 100) {
         logger("Queue size is too big, triggering write now", "info")
-        writeQueuedDataToHTTPDb()
+        writeQueuedDataToHTTP()
     }
 }
 
-def writeQueuedDataToHTTPDb() {
+def writeQueuedDataToHTTP() {
     String writeData = ""
     
     try {
         mutex.acquire()
         //if(!mutex.tryAcquire()) {
-        //    logger("Error 1 in writeQueuedDataToHTTPDb","Warning")
+        //    logger("Error 1 in writeQueuedDataToHTTP","Warning")
         //    mutex.release()
         //}
                 
@@ -736,7 +732,7 @@ def writeQueuedDataToHTTPDb() {
         state.queuedData = []
     }       
     catch(e) {
-        logger("Error 2 in writeQueuedDataToHTTPDb","Warning")
+        logger("Error 2 in writeQueuedDataToHTTP","Warning")
     } 
     finally {
         mutex.release()
@@ -779,7 +775,7 @@ def postToHTTP(data) {
      
     try {
         def postParams = [
-            uri: "http://${state.HTTPHost}:${state.HTTPPort}/${state.HTTPPath}" ,
+            uri: "${state.HTTPScheme}://${state.HTTPHost}:${state.HTTPPort}/${state.HTTPPath}" ,
             requestContentType: 'application/json',
             contentType: 'application/json',
             body : data
@@ -823,7 +819,7 @@ private manageSchedules() {
     
     try {
         unschedule(softPoll)
-        unschedule(writeQueuedDataToHTTPDb)
+        unschedule(writeQueuedDataToHTTP)
     }
     catch(e) {
         // logger("manageSchedules(): Unschedule failed!","error")
@@ -837,7 +833,7 @@ private manageSchedules() {
     }
     
     randomOffset = randomOffset+8
-    schedule("${randomOffset} 0/${state.writeInterval} * * * ?", "writeQueuedDataToHTTPDb")
+    schedule("${randomOffset} 0/${state.writeInterval} * * * ?", "writeQueuedDataToHTTP")
 }
 
 /**
