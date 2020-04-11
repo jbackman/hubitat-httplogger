@@ -506,7 +506,7 @@ def handleEvent(evt) {
         def valueX = valueXYZ[0]
         def valueY = valueXYZ[1]
         def valueZ = valueXYZ[2]
-        data << [unit: ${unit}, valueX: ${valueX}i, valueY: ${valueY}i, valueZ: ${valueZ}i] // values are integers.
+        data << [unit: ${unit}, valueX: ${valueX}, valueY: ${valueY}, valueZ: ${valueZ}] // values are integers.
     }
     else if ('touch' == evt.name) { // touch: Calculate a binary value (touched = 1, "" = 0)
         unit = 'touch'
@@ -647,7 +647,7 @@ def logSystemProperties() {
             def srt = '"' + times.sunrise.format("HH:mm", location.timeZone) + '"'
             def sst = '"' + times.sunset.format("HH:mm", location.timeZone) + '"'
 
-            def data = [measurement: "_heLocation", locationId: ${locationId}, locationName: ${locationName}, latitude: ${location.latitude},longitude: ${location.longitude},timeZone: ${tz}, mode: ${mode}, hubCount: ${hubCount}i, sunriseTime: ${srt}, sunsetTime: ${sst}]
+            def data = [measurement: "_heLocation", locationId: ${locationId}, locationName: ${locationName}, latitude: ${location.latitude},longitude: ${location.longitude},timeZone: ${tz}, mode: ${mode}, hubCount: ${hubCount}, sunriseTime: ${srt}, sunsetTime: ${sst}]
             queueToHTTP(data)
             //log.debug("LocationData = ${data}")
         } catch (e) {
