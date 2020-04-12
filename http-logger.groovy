@@ -42,12 +42,12 @@ definition(
     @Field static java.util.concurrent.Semaphore mutex = new java.util.concurrent.Semaphore(1)
 
 preferences {
-          page(name: "newPage")
+          page(name: "HTTP Logger")
 }
 
 
 def newPage() {
-    dynamicPage(name: "newPage", title: "New Settings Page", install: true, uninstall: true) {
+    dynamicPage(name: "HTTP Logger", title: "HTTP Logger Page", install: true, uninstall: true) {
         section("General:") {
             input (
                 name: "configLoggingLevelIDE",
@@ -72,7 +72,7 @@ def newPage() {
             options: ["0": 'http',"1": 'https']
             input "prefHTTPHost", "text", title: "Host", defaultValue: "192.168.1.100", required: true
             input "prefHTTPPort", "text", title: "Port", defaultValue: "8080", required: true
-            input "prefHTTPPath", "text", title: "path", defaultValue: "", required: false
+            input "prefHTTPPath", "text", title: "Path", defaultValue: "", required: false
             input "prefHTTPUser", "text", title: "Username", required: false
             input "prefHTTPPass", "text", title: "Password", required: false
         }
