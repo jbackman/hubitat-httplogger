@@ -42,12 +42,12 @@ definition(
     @Field static java.util.concurrent.Semaphore mutex = new java.util.concurrent.Semaphore(1)
 
 preferences {
-          page(name: "HTTP Logger")
+          page(name: "newPage")
 }
 
 
 def newPage() {
-    dynamicPage(name: "HTTP Logger", title: "HTTP Logger Page", install: true, uninstall: true) {
+    dynamicPage(name: "newPage", title: "HTTP Logger Page", install: true, uninstall: true) {
         section("General:") {
             input (
                 name: "configLoggingLevelIDE",
