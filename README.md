@@ -7,7 +7,9 @@ Copyright (c) [Justin Backman](https://github.com/jbackman)
 This Hubitat App logs Hubitat device attributes to a HTTP endpoint.
 
 This is unabashidly adapted from work done by:
+
 [David Lomas](https://github.com/codersaur): [SmartThings/smartapps/influxdb-logger](https://github.com/codersaur/SmartThings/blob/master/smartapps/influxdb-logger/)
+
 [Joshua Marker](https://github.com/tooluser): [HubitatCommunity/InfluxDB-Logger](https://github.com/HubitatCommunity/InfluxDB-Logger)
 
 ### Key features:
