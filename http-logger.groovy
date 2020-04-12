@@ -246,7 +246,6 @@ def updated() {
     state.path = "/${state.HTTPPath}"
     state.headers = [:] 
     state.headers.put("HOST", "${state.HTTPHost}:${state.HTTPPort}")
-    //state.headers.put("Content-Type", "application/x-www-form-urlencoded")
     if (state.HTTPUser && state.HTTPPass) {
         state.headers.put("Authorization", encodeCredentialsBasic(state.HTTPUser, state.HTTPPass))
     }
@@ -328,9 +327,9 @@ def handleAppTouch(evt) {
 def handleModeEvent(evt) {
     logger("handleModeEvent(): Mode changed to: ${evt.value}","info")
 
-    def locationId = escapeStringForHTTP(location.id.toString())
-    def locationName = escapeStringForHTTP(location.name)
-    def mode = '"' + escapeStringForHTTP(evt.value) + '"'
+    def locationId = location.id.toString()
+    def locationName = location.name
+    def mode = evt.value
     def data = [measurement: "_stMode", locationId: "${locationId}", locationName: "${locationName}", mode: "${mode}"]
     queueToHTTP(data)
 }
@@ -356,18 +355,18 @@ def handleEvent(evt) {
     //    If value is a string, it must be enclosed in double quotes.
     def measurement = evt.name
     // tags:
-    def deviceId = escapeStringForHTTP(evt.deviceId.toString())
-    def deviceName = escapeStringForHTTP(evt.displayName)
-    def groupId = escapeStringForHTTP(evt?.device.device.groupId)
-    def groupName = escapeStringForHTTP(getGroupName(evt?.device.device.groupId))
-    def hubId = escapeStringForHTTP(evt?.device.device.hubId.toString())
-    def hubName = escapeStringForHTTP(evt?.device.device.hub.name.toString())
+    def deviceId = evt.deviceId.toString()
+    def deviceName = evt.displayName
+    def groupId = evt?.device.device.groupId
+    def groupName = getGroupName(evt?.device.device.groupId)
+    def hubId = evt?.device.device.hubId.toString()
+    def hubName = evt?.device.device.hub.name.toString()
     // Don't pull these from the evt.device as the app itself will be associated with one location.
-    def locationId = escapeStringForHTTP(location.id.toString())
-    def locationName = escapeStringForHTTP(location.name)
+    def locationId = location.id.toString()
+    def locationName = location.name
 
-    def unit = escapeStringForHTTP(evt.unit)
-    def value = escapeStringForHTTP(evt.value)
+    def unit = evt.unit
+    def value = evt.value
     def valueBinary = ''
     
     def data = [measurement: "${measurement}", deviceId: "${deviceId}", deviceName: "${deviceName}", groupId: "${groupId}", groupName: "${groupName}", hubId: "${hubId}", hubName: "${hubName}", locationId: "${locationId}", locationName: "${locationName}"]
@@ -634,14 +633,14 @@ def softPoll() {
 def logSystemProperties() {
     logger("logSystemProperties()","trace")
 
-    def locationId = '"' + escapeStringForHTTP(location.id.toString()) + '"'
-    def locationName = '"' + escapeStringForHTTP(location.name) + '"'
+    def locationId = location.id.toString()
+    def locationName = location.name
 
     // Location Properties:
     if (prefLogLocationProperties) {
         try {
-            def tz = '"' + escapeStringForHTTP(location.timeZone.ID.toString()) + '"'
-            def mode = '"' + escapeStringForHTTP(location.mode) + '"'
+            def tz = location.timeZone.ID.toString()
+            def mode = location.mode
             def hubCount = location.hubs.size()
             def times = getSunriseAndSunset()
             def srt = '"' + times.sunrise.format("HH:mm", location.timeZone) + '"'
@@ -649,7 +648,6 @@ def logSystemProperties() {
 
             def data = [measurement: "_heLocation", locationId: "${locationId}", locationName: "${locationName}", latitude: "${location.latitude}",longitude: "${location.longitude}",timeZone: "${tz}", mode: "${mode}", hubCount: "${hubCount}", sunriseTime: "${srt}", sunsetTime: "${sst}"]
             queueToHTTP(data)
-            //log.debug("LocationData = ${data}")
         } catch (e) {
             logger("logSystemProperties(): Unable to log Location properties: ${e}","error")
         }
@@ -659,25 +657,14 @@ def logSystemProperties() {
     if (prefLogHubProperties) {
            location.hubs.each { h ->
             try {
-                def hubId = '"' + escapeStringForHTTP(h.id.toString()) + '"'
-                def hubName = '"' + escapeStringForHTTP(h.name.toString()) + '"'
-                def hubIP = '"' + escapeStringForHTTP(h.localIP.toString()) + '"'
-                //def hubStatus = '"' + escapeStringForHTTP(h.status) + '"'
-                //def batteryInUse = ("false" == h.hub.getDataValue("batteryInUse")) ? "0i" : "1i"
-                // See fix here for null time returned: https://github.com/codersaur/Hubitat/pull/33/files
-                //def hubUptime = h.hub.getDataValue("uptime") + 'i'
-                //def hubLastBootUnixTS = h.hub.uptime + 'i'
-                //def zigbeePowerLevel = h.hub.getDataValue("zigbeePowerLevel") + 'i'
-                //def zwavePowerLevel =  '"' + escapeStringForHTTP(h.hub.getDataValue("zwavePowerLevel")) + '"'
-                def firmwareVersion =  '"' + escapeStringForHTTP(h.firmwareVersionString) + '"'
+                def hubId = h.id.toString()
+                def hubName = h.name.toString()
+                def hubIP = h.localIP.toString()
+                def firmwareVersion =  h.firmwareVersionString
                 
                 def data = [measurement: "_heHub", locationId: "${locationId}", locationName: "${locationName}", hubId: "${hubId}", hubName: "${hubName}", hubIP: "${hubIP}"]
                 data << [firmwareVersion: "${firmwareVersion}"]
-                // See fix here for null time returned: https://github.com/codersaur/Hubitat/pull/33/files
-                //data += "status=${hubStatus},batteryInUse=${batteryInUse},uptime=${hubUptime},zigbeePowerLevel=${zigbeePowerLevel},zwavePowerLevel=${zwavePowerLevel},firmwareVersion=${firmwareVersion}"
-                //data += "status=${hubStatus},batteryInUse=${batteryInUse},uptime=${hubLastBootUnixTS},zigbeePowerLevel=${zigbeePowerLevel},zwavePowerLevel=${zwavePowerLevel},firmwareVersion=${firmwareVersion}"
                 queueToHTTP(data)
-                //log.debug("HubData = ${data}")
             } catch (e) {
                 logger("logSystemProperties(): Unable to log Hub properties: ${e}","error")
             }
@@ -719,10 +706,6 @@ def writeQueuedDataToHTTP() {
     
     try {
         mutex.acquire()
-        //if(!mutex.tryAcquire()) {
-        //    logger("Error 1 in writeQueuedDataToHTTP","Warning")
-        //    mutex.release()
-        //}
                 
         if(loggerQueue.size() == 0) {
             logger("No queued data to write to HTTP", "info")
@@ -749,30 +732,9 @@ def writeQueuedDataToHTTP() {
  *
  *  Posts data to HTTP.
  *
- *  Uses hubAction instead of httpPost() in case HTTP server is on the same LAN as the Smartthings Hub.
  **/
 def postToHTTP(data) {
     logger("postToHTTP(): Posting data to HTTP: Host: ${state.HTTPHost}, Port: ${state.HTTPPort}, HTTP: ${state.HTTPPath}","info")
-    //logger("$state", "info")
-    //try {
-    //    //def hubAction = new physicalgraph.device.HubAction(
-    //    def hubAction = new hubitat.device.HubAction(
-    //        [
-    //            method: "POST",
-    //            path: state.path,
-    //            body: data,
-    //            headers: state.headers
-    //        ],
-    //        null,
-    //        [ callback: handleHTTPResponse ]
-    //    )
-    //    
-    //    sendHubCommand(hubAction)
-    //    //logger("hubAction command sent", "info")
-    //}
-    //catch (Exception e) {
-    //    logger("postToHTTP(): Exception ${e} on ${hubAction}","error")
-    //}
 
     // Hubitat Async http Post
      
@@ -796,7 +758,6 @@ def postToHTTP(data) {
  *  Handles response from post made in postToHTTP().
  **/
 def handleHTTPResponse(hubResponse, data) {
-    //logger("postToHTTP(): status of post call is: ${hubResponse.status}", "info")
     if(hubResponse.status >= 400) {
         logger("postToHTTP(): Something went wrong! Response from HTTP: Status: ${hubResponse.status}, Headers: ${hubResponse.headers}, Data: ${data}","error")
     }
@@ -922,31 +883,6 @@ private logger(msg, level = "debug") {
 private encodeCredentialsBasic(username, password) {
     def rawString = "Basic " + "${username}:${password}"
     return rawString.bytes.encodeBase64().toString()
-}
-
-/**
- *  escapeStringForHTTP()
- *
- *  Escape values to HTTP.
- *  
- *  If a tag key, tag value, or field key contains a space, comma, or an equals sign = it must 
- *  be escaped using the backslash character \. Backslash characters do not need to be escaped. 
- *  Commas and spaces will also need to be escaped for measurements, though equals signs = do not.
- *
- **/
-private escapeStringForHTTP(str) {
-    //logger("$str", "info")
-    if (str) {
-        str = str.replaceAll(" ", "\\\\ ") // Escape spaces.
-        str = str.replaceAll(",", "\\\\,") // Escape commas.
-        str = str.replaceAll("=", "\\\\=") // Escape equal signs.
-        str = str.replaceAll("\"", "\\\\\"") // Escape double quotes.
-        //str = str.replaceAll("'", "_")  // Replace apostrophes with underscores.
-    }
-    else {
-        str = 'null'
-    }
-    return str
 }
 
 /**
