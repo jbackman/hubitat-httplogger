@@ -7,7 +7,7 @@
  *  Hubitat Elevation version maintained by Justin Backman
  *
  *  Description: A SmartApp to log Hubitat device states to an HTTP endpoint.
- *  Inspired by: https://github.com/HubitatCommunity/HTTP-Logger
+ *  Adapted from: https://github.com/HubitatCommunity/InfluxDB-Logger
  *
  *  NOTE: Hubitat does not currently support group names.
  *
