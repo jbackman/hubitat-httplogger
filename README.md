@@ -33,7 +33,7 @@ This is unabashidly adapted from work done by:
 
 ### Usage
 App settings:
-
+* **IDE Live Logging Level**: Messages with this level and higher will be logged to the IDE.
 * **HTTP Endpoint:**: Specify your HTTP endpoint details in this section.
 * **Polling**: Configure the _Soft-Polling_ interval. All device attribute values will be written to the database at least once per interval. This is useful to ensure attribute values are written to the database, even when they have not changed. Set to zero to disable.
 * **System Monitoring**: Configure which location and hub attributes are logged.
