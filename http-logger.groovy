@@ -376,127 +376,127 @@ def handleEvent(evt) {
     if ('acceleration' == evt.name) { // acceleration: Calculate a binary value (active = 1, inactive = 0)
         unit = 'acceleration'
         value = '"' + value + '"'
-        valueBinary = ('active' == evt.value) ? '1i' : '0i'
+        valueBinary = ('active' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('alarm' == evt.name) { // alarm: Calculate a binary value (strobe/siren/both = 1, off = 0)
         unit = 'alarm'
         value = '"' + value + '"'
-        valueBinary = ('off' == evt.value) ? '0i' : '1i'
+        valueBinary = ('off' == evt.value) ? '0' : '1'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('button' == evt.name) { // button: Calculate a binary value (held = 1, pushed = 0)
         unit = 'button'
         value = '"' + value + '"'
-        valueBinary = ('pushed' == evt.value) ? '0i' : '1i'
+        valueBinary = ('pushed' == evt.value) ? '0' : '1'
         data << [unit: "${unit}", value: "${value}",valueBinary: "${valueBinary}"]
     }
     else if ('carbonMonoxide' == evt.name) { // carbonMonoxide: Calculate a binary value (detected = 1, clear/tested = 0)
         unit = 'carbonMonoxide'
         value = '"' + value + '"'
-        valueBinary = ('detected' == evt.value) ? '1i' : '0i'
+        valueBinary = ('detected' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('consumableStatus' == evt.name) { // consumableStatus: Calculate a binary value ("good" = 1, "missing"/"replace"/"maintenance_required"/"order" = 0)
         unit = 'consumableStatus'
         value = '"' + value + '"'
-        valueBinary = ('good' == evt.value) ? '1i' : '0i'
+        valueBinary = ('good' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('contact' == evt.name) { // contact: Calculate a binary value (closed = 1, open = 0)
         unit = 'contact'
         value = '"' + value + '"'
-        valueBinary = ('closed' == evt.value) ? '1i' : '0i'
+        valueBinary = ('closed' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('door' == evt.name) { // door: Calculate a binary value (closed = 1, open/opening/closing/unknown = 0)
         unit = 'door'
         value = '"' + value + '"'
-        valueBinary = ('closed' == evt.value) ? '1i' : '0i'
+        valueBinary = ('closed' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('lock' == evt.name) { // door: Calculate a binary value (locked = 1, unlocked = 0)
         unit = 'lock'
         value = '"' + value + '"'
-        valueBinary = ('locked' == evt.value) ? '1i' : '0i'
+        valueBinary = ('locked' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('motion' == evt.name) { // Motion: Calculate a binary value (active = 1, inactive = 0)
         unit = 'motion'
         value = '"' + value + '"'
-        valueBinary = ('active' == evt.value) ? '1i' : '0i'
+        valueBinary = ('active' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('mute' == evt.name) { // mute: Calculate a binary value (muted = 1, unmuted = 0)
         unit = 'mute'
         value = '"' + value + '"'
-        valueBinary = ('muted' == evt.value) ? '1i' : '0i'
+        valueBinary = ('muted' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('presence' == evt.name) { // presence: Calculate a binary value (present = 1, not present = 0)
         unit = 'presence'
         value = '"' + value + '"'
-        valueBinary = ('present' == evt.value) ? '1i' : '0i'
+        valueBinary = ('present' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('shock' == evt.name) { // shock: Calculate a binary value (detected = 1, clear = 0)
         unit = 'shock'
         value = '"' + value + '"'
-        valueBinary = ('detected' == evt.value) ? '1i' : '0i'
+        valueBinary = ('detected' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('sleeping' == evt.name) { // sleeping: Calculate a binary value (sleeping = 1, not sleeping = 0)
         unit = 'sleeping'
         value = '"' + value + '"'
-        valueBinary = ('sleeping' == evt.value) ? '1i' : '0i'
+        valueBinary = ('sleeping' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('smoke' == evt.name) { // smoke: Calculate a binary value (detected = 1, clear/tested = 0)
         unit = 'smoke'
         value = '"' + value + '"'
-        valueBinary = ('detected' == evt.value) ? '1i' : '0i'
+        valueBinary = ('detected' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('sound' == evt.name) { // sound: Calculate a binary value (detected = 1, not detected = 0)
         unit = 'sound'
         value = '"' + value + '"'
-        valueBinary = ('detected' == evt.value) ? '1i' : '0i'
+        valueBinary = ('detected' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('switch' == evt.name) { // switch: Calculate a binary value (on = 1, off = 0)
         unit = 'switch'
         value = '"' + value + '"'
-        valueBinary = ('on' == evt.value) ? '1i' : '0i'
+        valueBinary = ('on' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('tamper' == evt.name) { // tamper: Calculate a binary value (detected = 1, clear = 0)
         unit = 'tamper'
         value = '"' + value + '"'
-        valueBinary = ('detected' == evt.value) ? '1i' : '0i'
+        valueBinary = ('detected' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('thermostatMode' == evt.name) { // thermostatMode: Calculate a binary value (<any other value> = 1, off = 0)
         unit = 'thermostatMode'
         value = '"' + value + '"'
-        valueBinary = ('off' == evt.value) ? '0i' : '1i'
+        valueBinary = ('off' == evt.value) ? '0' : '1'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('thermostatFanMode' == evt.name) { // thermostatFanMode: Calculate a binary value (<any other value> = 1, off = 0)
         unit = 'thermostatFanMode'
         value = '"' + value + '"'
-        valueBinary = ('off' == evt.value) ? '0i' : '1i'
+        valueBinary = ('off' == evt.value) ? '0' : '1'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('thermostatOperatingState' == evt.name) { // thermostatOperatingState: Calculate a binary value (heating = 1, <any other value> = 0)
         unit = 'thermostatOperatingState'
         value = '"' + value + '"'
-        valueBinary = ('heating' == evt.value) ? '1i' : '0i'
+        valueBinary = ('heating' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('thermostatSetpointMode' == evt.name) { // thermostatSetpointMode: Calculate a binary value (followSchedule = 0, <any other value> = 1)
         unit = 'thermostatSetpointMode'
         value = '"' + value + '"'
-        valueBinary = ('followSchedule' == evt.value) ? '0i' : '1i'
+        valueBinary = ('followSchedule' == evt.value) ? '0' : '1'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('threeAxis' == evt.name) { // threeAxis: Format to x,y,z values.
@@ -510,37 +510,37 @@ def handleEvent(evt) {
     else if ('touch' == evt.name) { // touch: Calculate a binary value (touched = 1, "" = 0)
         unit = 'touch'
         value = '"' + value + '"'
-        valueBinary = ('touched' == evt.value) ? '1i' : '0i'
+        valueBinary = ('touched' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('optimisation' == evt.name) { // optimisation: Calculate a binary value (active = 1, inactive = 0)
         unit = 'optimisation'
         value = '"' + value + '"'
-        valueBinary = ('active' == evt.value) ? '1i' : '0i'
+        valueBinary = ('active' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('windowFunction' == evt.name) { // windowFunction: Calculate a binary value (active = 1, inactive = 0)
         unit = 'windowFunction'
         value = '"' + value + '"'
-        valueBinary = ('active' == evt.value) ? '1i' : '0i'
+        valueBinary = ('active' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('touch' == evt.name) { // touch: Calculate a binary value (touched = 1, <any other value> = 0)
         unit = 'touch'
         value = '"' + value + '"'
-        valueBinary = ('touched' == evt.value) ? '1i' : '0i'
+        valueBinary = ('touched' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('water' == evt.name) { // water: Calculate a binary value (wet = 1, dry = 0)
         unit = 'water'
         value = '"' + value + '"'
-        valueBinary = ('wet' == evt.value) ? '1i' : '0i'
+        valueBinary = ('wet' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     else if ('windowShade' == evt.name) { // windowShade: Calculate a binary value (closed = 1, <any other value> = 0)
         unit = 'windowShade'
         value = '"' + value + '"'
-        valueBinary = ('closed' == evt.value) ? '1i' : '0i'
+        valueBinary = ('closed' == evt.value) ? '1' : '0'
         data << [unit: "${unit}", value: "${value}", valueBinary: "${valueBinary}"]
     }
     // Catch any other event with a string value that hasn't been handled:
@@ -551,7 +551,7 @@ def handleEvent(evt) {
     }
     // Catch any other general numerical event (carbonDioxide, power, energy, humidity, level, temperature, ultravioletIndex, voltage, etc).
     else {
-        data << [unit: "${unit}", value: "${value}"]
+        data << [unit: "${unit}", value: "${value}", valueInt: "${value}"]
     }
     
     logger("$data","info")
